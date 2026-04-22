@@ -221,10 +221,12 @@ function showToast(msg) {
    ================================================================ */
 (function ScrollReveal() {
   if (!('IntersectionObserver' in window)) {
-    // Fallback: show everything immediately
     $$('[data-reveal-item]').forEach(el => el.classList.add('revealed'));
     return;
   }
+
+  // Mark page as JS-enhanced so CSS can apply the hide-before-reveal state
+  document.documentElement.classList.add('js-ready');
 
   const obs = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
@@ -233,7 +235,7 @@ function showToast(msg) {
         obs.unobserve(entry.target);
       }
     });
-  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+  }, { threshold: 0.05, rootMargin: '0px 0px 0px 0px' });
 
   $$('[data-reveal-item]').forEach(el => obs.observe(el));
 })();
