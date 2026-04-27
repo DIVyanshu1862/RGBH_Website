@@ -61,16 +61,19 @@ const BackToTop = (() => {
 const MobileMenu = (() => {
   const btn      = $('#hamburger');
   const navLinks = $('#navLinks');
+  const overlay  = $('#navOverlay');
 
   function open() {
     btn.classList.add('open');
     navLinks.classList.add('open');
+    overlay?.classList.add('active');
     btn.setAttribute('aria-expanded', 'true');
     document.body.style.overflow = 'hidden';
   }
   function close() {
     btn.classList.remove('open');
     navLinks.classList.remove('open');
+    overlay?.classList.remove('active');
     btn.setAttribute('aria-expanded', 'false');
     document.body.style.overflow = '';
   }
@@ -86,11 +89,7 @@ const MobileMenu = (() => {
     });
   }
 
-  document.addEventListener('click', e => {
-    if (navLinks?.classList.contains('open') && !e.target.closest('.nav-container')) {
-      close();
-    }
-  });
+  overlay?.addEventListener('click', close);
 
   document.addEventListener('keydown', e => {
     if (e.key === 'Escape') close();
