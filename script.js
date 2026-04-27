@@ -1,6 +1,5 @@
 /* ================================================================
    Rajdhani Grih Boys Hostel  —  script.js
-   Premium interactions, animations, and behaviours
    ================================================================ */
 
 'use strict';
@@ -11,7 +10,23 @@ const $$ = (s, ctx = document) => [...ctx.querySelectorAll(s)];
 
 
 /* ================================================================
-   1. NAVBAR
+   1. BACK TO TOP  (declared first — referenced by Navbar's onScroll)
+   ================================================================ */
+const BackToTop = (() => {
+  const btn = $('#btt');
+
+  function toggle() {
+    btn?.classList.toggle('visible', window.scrollY > 450);
+  }
+
+  btn?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+  return { toggle };
+})();
+
+
+/* ================================================================
+   2. NAVBAR
    ================================================================ */
 (function Navbar() {
   const navbar   = $('#navbar');
@@ -19,10 +34,8 @@ const $$ = (s, ctx = document) => [...ctx.querySelectorAll(s)];
   const sections = $$('section[id]');
 
   function onScroll() {
-    // Scrolled state (shadow + white bg)
     navbar.classList.toggle('scrolled', window.scrollY > 50);
 
-    // Active link highlighting
     let active = '';
     sections.forEach(sec => {
       if (window.scrollY >= sec.offsetTop - 110) active = sec.id;
@@ -32,20 +45,18 @@ const $$ = (s, ctx = document) => [...ctx.querySelectorAll(s)];
       link.classList.toggle('active', id === active);
     });
 
-    // Back-to-top visibility
     BackToTop.toggle();
   }
 
   window.addEventListener('scroll', onScroll, { passive: true });
-  onScroll(); // run once on load
+  onScroll();
 
-  // Close mobile menu on link click
   navLinks.forEach(link => link.addEventListener('click', () => MobileMenu.close()));
 })();
 
 
 /* ================================================================
-   2. MOBILE MENU
+   3. MOBILE MENU
    ================================================================ */
 const MobileMenu = (() => {
   const btn      = $('#hamburger');
@@ -55,20 +66,30 @@ const MobileMenu = (() => {
     btn.classList.add('open');
     navLinks.classList.add('open');
     btn.setAttribute('aria-expanded', 'true');
+    document.body.style.overflow = 'hidden';
   }
   function close() {
     btn.classList.remove('open');
     navLinks.classList.remove('open');
     btn.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
   }
   function toggle() {
     navLinks.classList.contains('open') ? close() : open();
   }
 
-  btn?.addEventListener('click', e => { e.stopPropagation(); toggle(); });
+  if (btn) {
+    btn.addEventListener('click', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      toggle();
+    });
+  }
 
   document.addEventListener('click', e => {
-    if (!e.target.closest('.nav-container')) close();
+    if (navLinks?.classList.contains('open') && !e.target.closest('.nav-container')) {
+      close();
+    }
   });
 
   document.addEventListener('keydown', e => {
@@ -80,7 +101,7 @@ const MobileMenu = (() => {
 
 
 /* ================================================================
-   3. SMOOTH SCROLL
+   4. SMOOTH SCROLL
    ================================================================ */
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
   anchor.addEventListener('click', function (e) {
@@ -101,40 +122,24 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
 
 
 /* ================================================================
-   4. BACK TO TOP
-   ================================================================ */
-const BackToTop = (() => {
-  const btn = $('#btt');
-
-  function toggle() {
-    btn?.classList.toggle('visible', window.scrollY > 450);
-  }
-
-  btn?.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
-
-  return { toggle };
-})();
-
-
-/* ================================================================
    5. FAQ ACCORDION
    ================================================================ */
 (function FAQ() {
   const items = $$('.faq-item');
+  if (!items.length) return;
 
   items.forEach(item => {
     const btn = item.querySelector('.faq-q');
+    if (!btn) return;
 
     btn.addEventListener('click', () => {
       const isOpen = item.classList.contains('open');
 
-      // Close all
       items.forEach(i => {
         i.classList.remove('open');
-        i.querySelector('.faq-q').setAttribute('aria-expanded', 'false');
+        i.querySelector('.faq-q')?.setAttribute('aria-expanded', 'false');
       });
 
-      // Open clicked (unless it was already open)
       if (!isOpen) {
         item.classList.add('open');
         btn.setAttribute('aria-expanded', 'true');
@@ -161,7 +166,6 @@ const BackToTop = (() => {
     }
   });
 
-  // Live validation — remove error on input
   $$('input, select, textarea', form).forEach(field => {
     field.addEventListener('input', () => field.classList.remove('error'));
   });
@@ -169,26 +173,18 @@ const BackToTop = (() => {
   function validate() {
     let ok = true;
 
-    // Required fields
     $$('[required]', form).forEach(field => {
-      if (!field.value.trim()) {
-        markError(field);
-        ok = false;
-      }
+      if (!field.value.trim()) { markError(field); ok = false; }
     });
 
-    // Phone format
     const phone = $('#phone', form);
     if (phone?.value && !/^\+?[\d\s\-()]{8,15}$/.test(phone.value.trim())) {
-      markError(phone);
-      ok = false;
+      markError(phone); ok = false;
     }
 
-    // Email format
     const email = $('#email', form);
     if (email?.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())) {
-      markError(email);
-      ok = false;
+      markError(email); ok = false;
     }
 
     return ok;
@@ -225,7 +221,6 @@ function showToast(msg) {
     return;
   }
 
-  // Mark page as JS-enhanced so CSS can apply the hide-before-reveal state
   document.documentElement.classList.add('js-ready');
 
   const obs = new IntersectionObserver((entries) => {
@@ -270,18 +265,14 @@ function showToast(msg) {
 
     function step(now) {
       const progress = Math.min((now - start) / duration, 1);
-      const eased    = easeOutCubic(progress);
+      const eased    = 1 - Math.pow(1 - progress, 3);
       const current  = eased * target;
-
       el.textContent = prefix + (isFloat ? current.toFixed(1) : Math.round(current)) + suffix;
-
       if (progress < 1) requestAnimationFrame(step);
     }
 
     requestAnimationFrame(step);
   }
-
-  function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
 })();
 
 
@@ -297,13 +288,11 @@ function showToast(msg) {
   document.addEventListener('mousemove', e => {
     if (ticking) return;
     ticking = true;
-
     requestAnimationFrame(() => {
       const cx = window.innerWidth  / 2;
       const cy = window.innerHeight / 2;
-      const dx = (e.clientX - cx) / cx;  // -1 to 1
+      const dx = (e.clientX - cx) / cx;
       const dy = (e.clientY - cy) / cy;
-
       heroVisual.style.transform = `translate(${dx * 8}px, ${dy * 6}px)`;
       ticking = false;
     });
@@ -312,22 +301,7 @@ function showToast(msg) {
 
 
 /* ================================================================
-   11. GALLERY ITEM RIPPLE  (lightweight lightbox placeholder)
-   ================================================================ */
-(function GalleryInteraction() {
-  $$('.gm-item').forEach(item => {
-    item.addEventListener('click', function () {
-      const label = this.querySelector('.gm-overlay span')?.textContent || 'Gallery';
-      // Replace with a real lightbox library if photos are added
-      // e.g. GLightbox, Fancybox, etc.
-      console.info(`[Gallery] Clicked: "${label}"`);
-    });
-  });
-})();
-
-
-/* ================================================================
-   12. NAVBAR LINK — underline slide indicator (optional, desktop)
+   11. NAVBAR LINK — underline slide indicator (desktop only)
    ================================================================ */
 (function NavIndicator() {
   const nav = $('#navLinks');
@@ -358,10 +332,9 @@ function showToast(msg) {
   nav.addEventListener('mouseleave', () => {
     const active = $('.nav-link.active', nav);
     if (active) moveIndicator(active);
-    else { indicator.style.width = '0'; }
+    else indicator.style.width = '0';
   });
 
-  // Initial position
   const active = $('.nav-link.active', nav);
   if (active) {
     indicator.style.transition = 'none';

@@ -1634,7 +1634,7 @@ input, select, textarea { font-family:inherit; font-size:inherit; }
   overflow: hidden;
   transition: max-height .4s var(--ease);
 }
-.faq-item.open .faq-a { max-height: 280px; }
+.faq-item.open .faq-a { max-height: 600px; }
 
 .faq-a p {
   padding: 0 1.35rem 1.2rem;
