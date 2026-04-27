@@ -159,7 +159,28 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
   form.addEventListener('submit', e => {
     e.preventDefault();
     if (validate()) {
-      showToast('Enquiry sent! We\'ll contact you soon.');
+      const name     = $('#name',     form)?.value.trim() || '';
+      const phone    = $('#phone',    form)?.value.trim() || '';
+      const email    = $('#email',    form)?.value.trim() || 'Not provided';
+      const roomSel  = $('#roomType', form);
+      const roomType = roomSel?.options[roomSel.selectedIndex]?.text || 'Not specified';
+      const message  = $('#message',  form)?.value.trim() || 'No message';
+
+      const text = [
+        '🏠 *New Room Enquiry — Rajdhani Grih Hostel*',
+        '',
+        `*Name:* ${name}`,
+        `*Phone:* ${phone}`,
+        `*Email:* ${email}`,
+        `*Room Type:* ${roomType}`,
+        `*Message:* ${message}`,
+        '',
+        '_Sent from rajdhanigrihhostel.com_',
+      ].join('\n');
+
+      window.open('https://wa.me/919835824405?text=' + encodeURIComponent(text), '_blank');
+
+      showToast('Enquiry sent! We\'ll contact you on WhatsApp.');
       form.reset();
       $$('[data-error]', form).forEach(el => el.remove());
       $$('.error', form).forEach(el => el.classList.remove('error'));
